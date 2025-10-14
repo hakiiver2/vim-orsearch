@@ -1,0 +1,289 @@
+*orsearch.txt*  OR/NOT/Phrase search for Vim
+
+                    _____  _____  _____                      _     ~
+                   |     ||   _ ||   __|___ ___ ___ ___ ___| |_   ~
+                   |  |  ||   __||__   | -_| .'|  _|  _|   |   |  ~
+                   |_____||__|   |_____|___|__,|_| |___|_|_|_|_|  ~
+
+
+Author:  hakiiver2
+License: MIT
+Version: 0.1
+
+==============================================================================
+CONTENTS                                                   *orsearch-contents*
+
+    1. Introduction ........................... |orsearch-introduction|
+    2. Installation ........................... |orsearch-installation|
+    3. Usage .................................. |orsearch-usage|
+    4. Query Syntax ........................... |orsearch-query-syntax|
+    5. Commands ............................... |orsearch-commands|
+    6. Mappings ............................... |orsearch-mappings|
+    7. Configuration .......................... |orsearch-configuration|
+    8. Examples ............................... |orsearch-examples|
+    9. Roadmap ................................ |orsearch-roadmap|
+
+==============================================================================
+1. INTRODUCTION                                        *orsearch-introduction*
+
+OrSearch is a powerful Vim plugin that extends Vim's native search
+capabilities with OR, NOT, and phrase matching functionality. It allows you
+to search for multiple terms at once, exclude specific terms, and search
+for exact phrases.
+
+Key Features:
+  - OR search: Find lines containing ANY of multiple terms
+  - NOT search: Exclude lines containing specific terms
+  - Phrase search: Match exact phrases using quotes
+  - Full-width space normalization for Japanese input
+  - Pure Vimscript implementation (no external dependencies)
+
+==============================================================================
+2. INSTALLATION                                        *orsearch-installation*
+
+Using vim-plug:
+>
+    Plug 'hakiiver2/vim-orsearch'
+<
+
+Using Vundle:
+>
+    Plugin 'hakiiver2/vim-orsearch'
+<
+
+Using Pathogen:
+>
+    cd ~/.vim/bundle
+    git clone https://github.com/hakiiver2/vim-orsearch.git
+<
+
+Manual installation:
+>
+    mkdir -p ~/.vim/plugin ~/.vim/doc
+    cp plugin/orsearch.vim ~/.vim/plugin/
+    cp doc/orsearch.txt ~/.vim/doc/
+    vim -c 'helptags ~/.vim/doc' -c quit
+<
+
+==============================================================================
+3. USAGE                                                      *orsearch-usage*
+
+Interactive mode:
+>
+    :OrSearch
+<
+This will prompt you for a search query. Enter your query and press Enter.
+
+Direct query mode:
+>
+    :OrSearch foo bar -baz
+<
+This will search for lines containing "foo" OR "bar", but NOT "baz".
+
+Using mapping (default: <leader>/):
+>
+    <leader>/
+<
+This opens the interactive search prompt.
+
+==============================================================================
+4. QUERY SYNTAX                                        *orsearch-query-syntax*
+
+Basic OR search:
+>
+    foo bar baz
+<
+Finds lines containing ANY of: foo, bar, or baz
+
+NOT search (exclusion):
+>
+    foo -bar
+<
+Finds lines containing "foo" but NOT containing "bar"
+
+Phrase search (exact match):
+>
+    "foo bar"
+<
+Finds lines containing the exact phrase "foo bar"
+
+NOT phrase:
+>
+    -"foo bar"
+<
+Excludes lines containing the exact phrase "foo bar"
+
+Combined example:
+>
+    error warning -debug -"test case"
+<
+Finds lines with "error" OR "warning", but NOT "debug" and NOT "test case"
+
+Special patterns:
+  - Full-width spaces (　) are normalized to half-width spaces
+  - Multiple consecutive spaces are collapsed to single spaces
+  - Empty queries are ignored
+
+==============================================================================
+5. COMMANDS                                                *orsearch-commands*
+
+                                                                    *:OrSearch*
+:OrSearch [query]
+    Execute an OR/NOT/Phrase search with the given query.
+    If no query is provided, prompts for interactive input.
+
+    Examples:
+>
+        :OrSearch foo bar
+        :OrSearch error -debug
+        :OrSearch "exact phrase"
+        :OrSearch
+<
+
+==============================================================================
+6. MAPPINGS                                                *orsearch-mappings*
+
+                                                               *<Plug>OrSearch*
+<Plug>OrSearch
+    Opens the interactive OR search prompt.
+
+Default mapping:
+>
+    nmap <leader>/ <Plug>OrSearch
+<
+
+To disable the default mapping:
+>
+    let g:orsearch_no_default_mappings = 1
+<
+
+To create your own mapping:
+>
+    nmap <your-key> <Plug>OrSearch
+<
+
+==============================================================================
+7. CONFIGURATION                                      *orsearch-configuration*
+
+                                                         *g:orsearch_space_or*
+g:orsearch_space_or
+    Enable/disable space as OR separator.
+    Default: 1 (enabled)
+
+    Example:
+>
+        let g:orsearch_space_or = 1
+<
+
+                                                  *g:orsearch_integrated_mode*
+g:orsearch_integrated_mode
+    Enable integrated mode where / uses OrSearch functionality.
+    When enabled, typing / will use OrSearch instead of Vim's default search.
+    Default: 0 (disabled)
+
+    Example:
+>
+        let g:orsearch_integrated_mode = 1
+<
+
+                                                    *g:orsearch_auto_detect*
+g:orsearch_auto_detect
+    Enable automatic detection of OrSearch syntax in integrated mode.
+    When enabled, queries with spaces, "-", or quotes use OrSearch.
+    Regular regex patterns fall back to Vim's default search.
+    Only applies when g:orsearch_integrated_mode = 1
+    Default: 1 (enabled)
+
+    Example:
+>
+        let g:orsearch_auto_detect = 1
+<
+
+Integrated Mode Usage:
+
+    With integrated mode enabled (g:orsearch_integrated_mode = 1):
+
+    - Press / to start search
+    - Enter query using OrSearch syntax (spaces, -, quotes)
+    - Auto-detection determines whether to use OrSearch or Vim search
+
+    Examples with auto-detect enabled:
+>
+        /foo bar          → Uses OrSearch (contains space)
+        /error -debug     → Uses OrSearch (contains -)
+        /"exact phrase"   → Uses OrSearch (contains quotes)
+        /\d\+             → Uses Vim search (regex pattern)
+        /^function        → Uses Vim search (no OrSearch syntax)
+<
+
+==============================================================================
+8. EXAMPLES                                                *orsearch-examples*
+
+Example 1: Find function definitions
+>
+    :OrSearch "function " "def " "fn "
+<
+
+Example 2: Find errors but not test errors
+>
+    :OrSearch error -test
+<
+
+Example 3: Find TODO or FIXME comments
+>
+    :OrSearch TODO FIXME
+<
+
+Example 4: Complex query
+>
+    :OrSearch "import React" "import Vue" -test -spec
+<
+Finds import statements for React or Vue, excluding test/spec files
+
+Example 5: Japanese text search
+>
+    :OrSearch エラー 警告 -デバッグ
+<
+Finds lines with "エラー" OR "警告", but NOT "デバッグ"
+
+Example 6: Integrated mode (when enabled)
+>
+    " Enable integrated mode in .vimrc
+    let g:orsearch_integrated_mode = 1
+
+    " Now use / for OrSearch
+    /foo bar           " Finds foo OR bar
+    /error -test       " Finds error but NOT test
+    /"exact phrase"    " Finds exact phrase
+    /\d\+              " Falls back to Vim regex (no OrSearch syntax)
+<
+
+==============================================================================
+9. ROADMAP                                                  *orsearch-roadmap*
+
+Version 0.1 (Current):
+  - OR / NOT / Phrase search
+  - Interactive and direct query modes
+  - Full-width space normalization
+
+Version 0.2 (Planned):
+  - AND operator (&foo &bar)
+  - Fuzzy matching (~foo)
+  - Case sensitivity toggle
+
+Version 0.2 (Current):
+  - Integrated mode (/ command integration)
+  - Auto-detection of OrSearch syntax
+  - Seamless fallback to Vim search
+
+Version 0.3 (Planned):
+  - Search history
+  - Query completion
+
+Version 0.4 (Planned):
+  - Advanced Japanese text support
+  - Regex mode toggle
+  - Custom operators
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
